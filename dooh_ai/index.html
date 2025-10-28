@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WTC ONNX Web Demo</title>
+  <style>
+    body {
+      background: #111;
+      color: #eee;
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 30px;
+    }
+    video, canvas {
+      border-radius: 8px;
+      display: block;
+      margin: 15px auto;
+    }
+    #controls {
+      margin-top: 20px;
+    }
+    button {
+      margin: 0 8px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      background: #007aff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #339bff;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏙️ WTC Detector</h1>
+  <video id="video" width="640" height="480" autoplay muted playsinline></video>
+  <canvas id="canvas" width="640" height="480"></canvas>
+
+  <div id="controls">
+    <input type="file" id="upload" accept="image/*" />
+    <button id="startCam">Start Webcam</button>
+    <button id="stopCam">Stop Webcam</button>
+  </div>
+
+  <!-- Load ONNX Runtime Web -->
+  <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.0/dist/ort.min.js"></script>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
