@@ -101,35 +101,6 @@ function App() {
     return keep;
   };
 
-  // Helper function: Load and scale image
-  const loadAndScaleImage = (imageSource, maxDimension = 2000) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-
-        if (width > maxDimension || height > maxDimension) {
-          const ratio = Math.min(maxDimension / width, maxDimension / height);
-          width *= ratio;
-          height *= ratio;
-          console.log(`Image scaled down from original size to ${Math.round(width)}x${Math.round(height)}`);
-        }
-
-        const canvasTmp = document.createElement("canvas");
-        canvasTmp.width = width;
-        canvasTmp.height = height;
-        const ctxTmp = canvasTmp.getContext("2d");
-        ctxTmp.drawImage(img, 0, 0, width, height);
-
-        const scaledImg = new Image();
-        scaledImg.onload = () => resolve(scaledImg);
-        scaledImg.onerror = reject;
-        scaledImg.src = canvasTmp.toDataURL();
-      };
-      img.onerror = reject;
-      img.src = imageSource;
-    });
-  };
 
   // Detection function
   const detect = async (imageElement) => {
@@ -359,19 +330,6 @@ function App() {
     animationFrameRef.current = requestAnimationFrame(loopDetection);
   };
 
-  // Image upload handler
-  const handleImageUpload = async (e) => {
-    stopWebcam();
-    const file = e.target.files[0];
-    if (!file) return;
-
-    try {
-      const scaledImage = await loadAndScaleImage(URL.createObjectURL(file), 2000);
-      await detect(scaledImage);
-    } catch (error) {
-      console.error("Failed to load or scale image:", error);
-    }
-  };
 
   // Cleanup on unmount
   useEffect(() => {
@@ -390,19 +348,11 @@ function App() {
         autoPlay
         muted
         playsInline
-        className={`rounded-lg mx-auto my-4 ${isRunning ? 'block' : 'hidden'}`}
+        className="hidden"
       />
       <canvas ref={canvasRef} width="640" height="480" className="rounded-lg block mx-auto my-4" />
 
       <div className="mt-5">
-        <input
-          type="file"
-          id="upload"
-          accept="image/*"
-          onChange={handleImageUpload}
-          disabled={!session}
-          className="mx-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        />
         <button
           id="startCam"
           onClick={startWebcam}
