@@ -29,7 +29,7 @@ function App() {
         }
       }
 
-      console.log("⏳ Loading YOLOv8 ONNX model...");
+      console.log("⏳ Loading YOLO ONNX model...");
 
       // Set WASM file path to CDN location
       ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.3/dist/';
@@ -425,4 +425,3 @@ function App() {
 }
 
 export default App;
-
