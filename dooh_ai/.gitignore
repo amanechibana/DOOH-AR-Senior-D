@@ -16,3 +16,4 @@ ml_training
 *.pt
 DOOH-AR-*
 ../runs
+datasets/
