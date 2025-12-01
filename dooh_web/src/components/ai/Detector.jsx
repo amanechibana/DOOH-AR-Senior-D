@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 let ort = null;
 
 // MODEL CONSTANTS (Based on YOLOv8 Segmentation Output)
-const NUM_FEATURES = 37; // 4 (box) + 1 (score) + 32 (mask coeffs)
+const NUM_FEATURES = 38; // 4 (box) + 1 (score) + 32 (mask coeffs)
 
 // Helper function: letterbox
 export const letterbox = (img, newShape = 640) => {
@@ -81,7 +81,7 @@ export function useDetector() {
 
       try {
         // Model file is in public/ folder, served from root in Vite
-        const newSession = await ort.InferenceSession.create("/wtc_finetuned_32.onnx", {
+        const newSession = await ort.InferenceSession.create("/duo_finetuned_32.onnx", {
           executionProviders: ["wasm"],
         });
         console.log("✅ Model loaded:", newSession.inputNames, "→", newSession.outputNames);
@@ -182,7 +182,7 @@ export function useDetector() {
     for (const [x1, y1, x2, y2, conf] of filtered) {
       ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
 
-      const label = `WTC ${(conf * 100).toFixed(1)}%`;
+      const label = `DUO ${(conf * 100).toFixed(1)}%`;
       const textWidth = ctx.measureText(label).width;
       ctx.fillRect(x1, y1 - 20, textWidth + 8, 20);
       ctx.fillStyle = "white";

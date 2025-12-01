@@ -44,7 +44,7 @@ export const drawAROverlay = (ctx, boxes) => {
   ctx.fillStyle = "#0f0";
   ctx.font = "bold 24px Arial";
   ctx.textAlign = "center";
-  ctx.fillText("🏢 World Trade Center", centerX, infoY + 28);
+  ctx.fillText("🏢", centerX, infoY + 28);
   ctx.font = "16px Arial";
   ctx.fillText(`Confidence: ${(conf * 100).toFixed(1)}%`, centerX, infoY + 48);
 
