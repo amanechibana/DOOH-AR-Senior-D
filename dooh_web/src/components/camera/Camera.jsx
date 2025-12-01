@@ -8,7 +8,12 @@ export function useCamera() {
   const startWebcam = async () => {
     if (isRunning || streamRef.current) return;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // Request rear camera (back camera) on mobile devices
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: {
+          facingMode: 'environment' // 'environment' = rear camera, 'user' = front camera
+        }
+      });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
