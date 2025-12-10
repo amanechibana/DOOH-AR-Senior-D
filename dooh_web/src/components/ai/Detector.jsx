@@ -9,8 +9,9 @@ const NUM_FEATURES = 39; // 4 (box) + 3 (class scores) + 32 (mask coeffs) for tr
 // Building class names - matches the model's class order
 export const BUILDING_CLASSES = [
   "Hudson Yards - The Edge",
-  "WTC",
-  "Empire State Building" // Add if model has 3 classes
+  "Empire State Building",
+  "WTC"
+ // Add if model has 3 classes
 ];
 
 // Helper function: letterbox
