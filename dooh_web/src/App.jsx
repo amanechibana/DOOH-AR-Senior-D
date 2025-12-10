@@ -35,10 +35,13 @@ function App() {
       const iw = video.videoWidth || 640;
       const ih = video.videoHeight || 480;
 
-      // Only resize if dimensions changed
+      // Only resize if dimensions changed - use actual video dimensions
       if (canvasRef.current.width !== iw || canvasRef.current.height !== ih) {
         canvasRef.current.width = iw;
         canvasRef.current.height = ih;
+        // Update CSS to maintain aspect ratio dynamically
+        const aspectRatio = iw / ih;
+        canvasRef.current.style.aspectRatio = `${aspectRatio}`;
       }
 
       // Clear and draw video frame
@@ -177,7 +180,7 @@ function App() {
           width="640" 
           height="480" 
           className="rounded-lg block my-2 sm:my-4 w-full sm:w-auto sm:max-w-2xl h-auto"
-          style={{ maxWidth: '100%', maxHeight: '70vh', aspectRatio: '4/3' }}
+          style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }}
         />
       </div>
 

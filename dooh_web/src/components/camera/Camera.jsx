@@ -9,9 +9,12 @@ export function useCamera() {
     if (isRunning || streamRef.current) return;
     try {
       // Request rear camera (back camera) on mobile devices
+      // Use ideal width/height to get better aspect ratio on mobile
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: {
-          facingMode: 'environment' // 'environment' = rear camera, 'user' = front camera
+          facingMode: 'environment', // 'environment' = rear camera, 'user' = front camera
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
       });
       streamRef.current = stream;

@@ -15,4 +15,8 @@ body {
 canvas {
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
 }
