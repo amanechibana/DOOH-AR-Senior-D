@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 let ort = null;
 
 // MODEL CONSTANTS (Based on YOLOv8 Segmentation Output)
-const NUM_FEATURES = 38; // 4 (box) + 2 (class scores) + 32 (mask coeffs)
+const NUM_FEATURES = 39; // 4 (box) + 3 (class scores) + 32 (mask coeffs) for trio model
 
 // Building class names - matches the model's class order
 export const BUILDING_CLASSES = [
@@ -92,7 +92,7 @@ export function useDetector() {
 
       try {
         // Model file is in public/ folder, served from root in Vite
-        const newSession = await ort.InferenceSession.create("/duo_finetuned_32.onnx", {
+        const newSession = await ort.InferenceSession.create("/trio_finetuned_32.onnx", {
           executionProviders: ["wasm"],
         });
         console.log("✅ Model loaded:", newSession.inputNames, "→", newSession.outputNames);
@@ -142,12 +142,12 @@ export function useDetector() {
     const confThresh = 0.6; // 60% confidence minimum
     const boxes = [];
 
-    // Check if model has expected number of features (38 for 2 classes, 39 for 3 classes)
-    if (numFeatures < NUM_FEATURES || numFeatures > NUM_FEATURES + 1) {
-      console.warn(`Expected ${NUM_FEATURES} or ${NUM_FEATURES + 1} features but got ${numFeatures}. Proceeding anyway...`);
+    // Check if model has expected number of features (39 for 3 classes in trio model)
+    if (numFeatures !== NUM_FEATURES) {
+      console.warn(`Expected ${NUM_FEATURES} features for trio model but got ${numFeatures}. Proceeding anyway...`);
     }
     
-    const numClasses = numFeatures === NUM_FEATURES ? 2 : 3; // 2 classes = 38 features, 3 classes = 39 features
+    const numClasses = 3; // Trio model has 3 classes
 
     // Helper function: sigmoid (for class scores)
     const sigmoid = (x) => 1.0 / (1.0 + Math.exp(-x));
