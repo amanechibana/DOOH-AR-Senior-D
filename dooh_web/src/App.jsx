@@ -47,11 +47,16 @@ function App() {
 
       // Redraw detection boxes and AR overlay on top (so they persist)
       if (lastDetections.length > 0) {
+        // Scale font and line width based on canvas size for mobile
+        const scale = Math.min(iw / 640, ih / 480);
+        const lineWidth = Math.max(2, 3 * scale);
+        const fontSize = Math.max(14, 18 * scale);
+        
         // Draw boxes
-        ctx.lineWidth = 3;
+        ctx.lineWidth = lineWidth;
         ctx.strokeStyle = "red";
         ctx.fillStyle = "red";
-        ctx.font = "18px monospace";
+        ctx.font = `${fontSize}px monospace`;
 
         for (const detection of lastDetections) {
           const { box, confidence, label } = detection;
@@ -163,17 +168,25 @@ function App() {
   }, []);
 
   return (
-    <div className="bg-gray-900 text-gray-100 font-sans text-center pt-8 min-h-screen">
-      <h1 className="text-3xl mb-6">🏙️ Building Detector</h1>
+    <div className="bg-gray-900 text-gray-100 font-sans text-center pt-4 sm:pt-8 min-h-screen pb-4">
+      <h1 className="text-2xl sm:text-3xl mb-4 sm:mb-6 px-4">🏙️ Building Detector</h1>
       <Camera videoRef={videoRef} />
-      <canvas ref={canvasRef} width="640" height="480" className="rounded-lg block mx-auto my-4" />
+      <div className="px-4 flex justify-center">
+        <canvas 
+          ref={canvasRef} 
+          width="640" 
+          height="480" 
+          className="rounded-lg block my-2 sm:my-4 w-full sm:w-auto sm:max-w-2xl h-auto"
+          style={{ maxWidth: '100%', maxHeight: '70vh', aspectRatio: '4/3' }}
+        />
+      </div>
 
-      <div className="mt-5">
+      <div className="mt-4 sm:mt-5 px-4 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-center items-center">
         <button
           id="startCam"
           onClick={startWebcam}
           disabled={!session || isRunning}
-          className="mx-2 px-4 py-2.5 rounded-md border-none bg-blue-500 text-white cursor-pointer hover:bg-blue-400 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+          className="w-full sm:w-auto sm:mx-2 px-6 sm:px-4 py-3 sm:py-2.5 text-lg sm:text-base rounded-md border-none bg-blue-500 text-white cursor-pointer active:bg-blue-600 hover:bg-blue-400 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
           Start Webcam
         </button>
@@ -181,7 +194,7 @@ function App() {
           id="stopCam"
           onClick={stopWebcam}
           disabled={!isRunning}
-          className="mx-2 px-4 py-2.5 rounded-md border-none bg-blue-500 text-white cursor-pointer hover:bg-blue-400 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
+          className="w-full sm:w-auto sm:mx-2 px-6 sm:px-4 py-3 sm:py-2.5 text-lg sm:text-base rounded-md border-none bg-blue-500 text-white cursor-pointer active:bg-blue-600 hover:bg-blue-400 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors touch-manipulation"
         >
           Stop Webcam
         </button>

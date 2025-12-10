@@ -11,12 +11,21 @@ export const drawAROverlay = (ctx, boxes) => {
   // Get building name from class ID
   const buildingName = BUILDING_CLASSES[classId] || `Building ${classId}`;
 
+  // Scale elements based on canvas size for mobile responsiveness
+  const canvas = ctx.canvas;
+  const scale = Math.min(canvas.width / 640, canvas.height / 480);
+  const baseRadius = 30 * scale;
+  const baseCrosshair = 40 * scale;
+  const baseBracket = 30 * scale;
+  const baseInfoHeight = 80 * scale;
+  const baseInfoWidth = Math.max(300 * scale, buildingName.length * 10 * scale + 40 * scale);
+
   ctx.save();
 
   // Pulsing green circle at center
   const time = Date.now() / 1000;
   const pulse = Math.sin(time * 2) * 0.5 + 0.5;
-  const radius = 30 + pulse * 20;
+  const radius = baseRadius + pulse * (20 * scale);
 
   ctx.fillStyle = `rgba(0, 255, 0, ${0.3 + pulse * 0.3})`;
   ctx.beginPath();
@@ -25,38 +34,38 @@ export const drawAROverlay = (ctx, boxes) => {
 
   // Crosshair at center
   ctx.strokeStyle = "#0f0";
-  ctx.lineWidth = 3;
+  ctx.lineWidth = Math.max(2, 3 * scale);
   ctx.beginPath();
-  ctx.moveTo(centerX - 40, centerY);
-  ctx.lineTo(centerX + 40, centerY);
-  ctx.moveTo(centerX, centerY - 40);
-  ctx.lineTo(centerX, centerY + 40);
+  ctx.moveTo(centerX - baseCrosshair, centerY);
+  ctx.lineTo(centerX + baseCrosshair, centerY);
+  ctx.moveTo(centerX, centerY - baseCrosshair);
+  ctx.lineTo(centerX, centerY + baseCrosshair);
   ctx.stroke();
 
   // Info box above building
-  const infoY = y1 - 100;
-  const infoWidth = Math.max(300, buildingName.length * 10 + 40); // Adjust width based on building name
-  const infoHeight = 80;
+  const infoY = y1 - (100 * scale);
+  const infoWidth = baseInfoWidth;
+  const infoHeight = baseInfoHeight;
   const infoX = centerX - infoWidth / 2;
 
   ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
   ctx.fillRect(infoX, infoY, infoWidth, infoHeight);
 
   ctx.strokeStyle = "#0f0";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = Math.max(1, 2 * scale);
   ctx.strokeRect(infoX, infoY, infoWidth, infoHeight);
 
   ctx.fillStyle = "#0f0";
-  ctx.font = "bold 20px Arial";
+  ctx.font = `bold ${Math.max(14, 20 * scale)}px Arial`;
   ctx.textAlign = "center";
-  ctx.fillText(buildingName, centerX, infoY + 28);
-  ctx.font = "16px Arial";
-  ctx.fillText(`Confidence: ${(conf * 100).toFixed(1)}%`, centerX, infoY + 52);
+  ctx.fillText(buildingName, centerX, infoY + (28 * scale));
+  ctx.font = `${Math.max(12, 16 * scale)}px Arial`;
+  ctx.fillText(`Confidence: ${(conf * 100).toFixed(1)}%`, centerX, infoY + (52 * scale));
 
   // Corner brackets around building
-  const bracketSize = 30;
+  const bracketSize = baseBracket;
   ctx.strokeStyle = "#0f0";
-  ctx.lineWidth = 4;
+  ctx.lineWidth = Math.max(2, 4 * scale);
 
   // Top-left bracket
   ctx.beginPath();
