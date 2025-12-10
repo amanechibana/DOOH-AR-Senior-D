@@ -15,6 +15,25 @@ export function useCamera() {
         }
       });
       streamRef.current = stream;
+      
+      // Apply 3x zoom if supported (mobile devices)
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack && videoTrack.getCapabilities) {
+        const capabilities = videoTrack.getCapabilities();
+        if (capabilities.zoom) {
+          const maxZoom = capabilities.zoom.max || 1;
+          const zoomLevel = Math.min(3.0, maxZoom); // 3x zoom, but don't exceed max
+          try {
+            await videoTrack.applyConstraints({
+              advanced: [{ zoom: zoomLevel }]
+            });
+            console.log(`Applied ${zoomLevel}x zoom`);
+          } catch (zoomErr) {
+            console.warn("Could not apply zoom:", zoomErr);
+          }
+        }
+      }
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
