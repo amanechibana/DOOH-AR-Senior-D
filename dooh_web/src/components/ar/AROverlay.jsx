@@ -1,10 +1,15 @@
+import { BUILDING_CLASSES } from '../ai/Detector';
+
 // AR Overlay function
 export const drawAROverlay = (ctx, boxes) => {
   if (boxes.length === 0) return;
 
-  const [x1, y1, x2, y2, conf] = boxes[0];
+  const [x1, y1, x2, y2, conf, classId] = boxes[0];
   const centerX = (x1 + x2) / 2;
   const centerY = (y1 + y2) / 2;
+  
+  // Get building name from class ID
+  const buildingName = BUILDING_CLASSES[classId] || `Building ${classId}`;
 
   ctx.save();
 
@@ -29,9 +34,9 @@ export const drawAROverlay = (ctx, boxes) => {
   ctx.stroke();
 
   // Info box above building
-  const infoY = y1 - 80;
-  const infoWidth = 300;
-  const infoHeight = 60;
+  const infoY = y1 - 100;
+  const infoWidth = Math.max(300, buildingName.length * 10 + 40); // Adjust width based on building name
+  const infoHeight = 80;
   const infoX = centerX - infoWidth / 2;
 
   ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
@@ -42,11 +47,11 @@ export const drawAROverlay = (ctx, boxes) => {
   ctx.strokeRect(infoX, infoY, infoWidth, infoHeight);
 
   ctx.fillStyle = "#0f0";
-  ctx.font = "bold 24px Arial";
+  ctx.font = "bold 20px Arial";
   ctx.textAlign = "center";
-  ctx.fillText("🏢", centerX, infoY + 28);
+  ctx.fillText(buildingName, centerX, infoY + 28);
   ctx.font = "16px Arial";
-  ctx.fillText(`Confidence: ${(conf * 100).toFixed(1)}%`, centerX, infoY + 48);
+  ctx.fillText(`Confidence: ${(conf * 100).toFixed(1)}%`, centerX, infoY + 52);
 
   // Corner brackets around building
   const bracketSize = 30;

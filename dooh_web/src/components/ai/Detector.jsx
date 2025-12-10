@@ -4,7 +4,14 @@ import { useState, useEffect } from 'react';
 let ort = null;
 
 // MODEL CONSTANTS (Based on YOLOv8 Segmentation Output)
-const NUM_FEATURES = 38; // 4 (box) + 1 (score) + 32 (mask coeffs)
+const NUM_FEATURES = 38; // 4 (box) + 2 (class scores) + 32 (mask coeffs)
+
+// Building class names - matches the model's class order
+export const BUILDING_CLASSES = [
+  "Hudson Yards - The Edge",
+  "WTC",
+  "Empire State Building" // Add if model has 3 classes
+];
 
 // Helper function: letterbox
 export const letterbox = (img, newShape = 640) => {
@@ -26,8 +33,8 @@ export const letterbox = (img, newShape = 640) => {
 };
 
 // Helper function: NMS
-export const nms = (boxes, iouThresh = 0.45) => {
-  boxes.sort((a, b) => b[4] - a[4]);
+export const nms = (boxes, iouThresh = 0.5, maxDetections = 1) => {
+  boxes.sort((a, b) => b[4] - a[4]); // Sort by confidence (index 4)
   const keep = [];
 
   for (let i = 0; i < boxes.length; i++) {
@@ -47,12 +54,16 @@ export const nms = (boxes, iouThresh = 0.45) => {
       const area2 = (kx2 - kx1) * (ky2 - ky1);
       const union = area1 + area2 - inter;
 
-      if (inter / union > iouThresh) {
+      if (union > 0 && inter / union > iouThresh) {
         shouldKeep = false;
         break;
       }
     }
-    if (shouldKeep) keep.push(boxes[i]);
+    if (shouldKeep) {
+      keep.push(boxes[i]);
+      // Limit maximum number of detections
+      if (keep.length >= maxDetections) break;
+    }
   }
   return keep;
 };
@@ -95,17 +106,13 @@ export function useDetector() {
   }, []);
 
   const detect = async (imageElement, canvasRef, drawAROverlay) => {
-    if (!session || !canvasRef.current) {
-      console.warn("Model not loaded yet or canvas not available");
+    if (!session || !imageElement) {
+      console.warn("Model not loaded yet or image not available");
       return [];
     }
 
-    const ctx = canvasRef.current.getContext("2d");
     const iw = imageElement.videoWidth || imageElement.width;
     const ih = imageElement.videoHeight || imageElement.height;
-    canvasRef.current.width = iw;
-    canvasRef.current.height = ih;
-    ctx.drawImage(imageElement, 0, 0, iw, ih);
 
     // Preprocess
     const { data, ratio, dx, dy } = letterbox(imageElement);
@@ -132,13 +139,18 @@ export function useDetector() {
     // YOLOv8 Decoding
     const numFeatures = shape[1];
     const numPred = shape[2];
-    const confThresh = 0.2;
+    const confThresh = 0.6; // 60% confidence minimum
     const boxes = [];
 
-    if (numFeatures !== NUM_FEATURES) {
-      console.error(`Expected ${NUM_FEATURES} features but got ${numFeatures}. Check your model export!`);
-      return [];
+    // Check if model has expected number of features (38 for 2 classes, 39 for 3 classes)
+    if (numFeatures < NUM_FEATURES || numFeatures > NUM_FEATURES + 1) {
+      console.warn(`Expected ${NUM_FEATURES} or ${NUM_FEATURES + 1} features but got ${numFeatures}. Proceeding anyway...`);
     }
+    
+    const numClasses = numFeatures === NUM_FEATURES ? 2 : 3; // 2 classes = 38 features, 3 classes = 39 features
+
+    // Helper function: sigmoid (for class scores)
+    const sigmoid = (x) => 1.0 / (1.0 + Math.exp(-x));
 
     // Iterate over predictions
     for (let i = 0; i < numPred; i++) {
@@ -146,7 +158,29 @@ export function useDetector() {
       const y = dataArr[1 * numPred + i];
       const wBox = dataArr[2 * numPred + i];
       const hBox = dataArr[3 * numPred + i];
-      const conf = dataArr[4 * numPred + i];
+      
+      // Features 4+ are class scores (apply sigmoid)
+      const class0Score = sigmoid(dataArr[4 * numPred + i]);
+      const class1Score = sigmoid(dataArr[5 * numPred + i]);
+      
+      // Find the class with highest score
+      let maxScore = class0Score;
+      let classId = 0;
+      if (class1Score > maxScore) {
+        maxScore = class1Score;
+        classId = 1;
+      }
+      
+      // Check if there's a third class (if model has 3 classes)
+      if (numClasses === 3) {
+        const class2Score = sigmoid(dataArr[6 * numPred + i]);
+        if (class2Score > maxScore) {
+          maxScore = class2Score;
+          classId = 2;
+        }
+      }
+      
+      const conf = maxScore;
 
       if (conf > confThresh) {
         let x1 = x - wBox / 2;
@@ -166,32 +200,38 @@ export function useDetector() {
         x2 = Math.min(iw, x2);
         y2 = Math.min(ih, y2);
 
-        boxes.push([x1, y1, x2, y2, conf, 0]);
+        boxes.push([x1, y1, x2, y2, conf, classId]);
       }
     }
 
     const filtered = nms(boxes);
     console.log(`✅ Detections after NMS: ${filtered.length}`);
 
-    // Draw boxes
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "red";
-    ctx.fillStyle = "red";
-    ctx.font = "18px monospace";
-
-    for (const [x1, y1, x2, y2, conf] of filtered) {
-      ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
-
-      const label = `DUO ${(conf * 100).toFixed(1)}%`;
-      const textWidth = ctx.measureText(label).width;
-      ctx.fillRect(x1, y1 - 20, textWidth + 8, 20);
-      ctx.fillStyle = "white";
-      ctx.fillText(label, x1 + 4, y1 - 4);
+    // Only draw if drawAROverlay callback is provided (for backward compatibility)
+    // Otherwise, just return the detections and let the render loop handle drawing
+    if (drawAROverlay && canvasRef.current && filtered.length > 0) {
+      const ctx = canvasRef.current.getContext("2d");
+      
+      // Draw boxes
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "red";
       ctx.fillStyle = "red";
-    }
+      ctx.font = "18px monospace";
 
-    // Draw AR overlay if provided
-    if (drawAROverlay && filtered.length > 0) {
+      for (const [x1, y1, x2, y2, conf, classId] of filtered) {
+        ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+
+        // Get building name from class ID
+        const buildingName = BUILDING_CLASSES[classId] || `Building ${classId}`;
+        const label = `${buildingName} ${(conf * 100).toFixed(1)}%`;
+        const textWidth = ctx.measureText(label).width;
+        ctx.fillRect(x1, y1 - 20, textWidth + 8, 20);
+        ctx.fillStyle = "white";
+        ctx.fillText(label, x1 + 4, y1 - 4);
+        ctx.fillStyle = "red";
+      }
+
+      // Draw AR overlay
       drawAROverlay(ctx, filtered);
     }
 
